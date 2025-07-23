@@ -13,6 +13,7 @@ RUN cargo build --release
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt install -y openssl
+RUN apt-get update && apt install -y openssl ca-certificates && update-ca-certificates
 
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/config.json /usr/src/app/
