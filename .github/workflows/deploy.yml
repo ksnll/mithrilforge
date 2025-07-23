@@ -43,7 +43,7 @@ jobs:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
 
       - name: Deploy Sealed Secret
-        run: kubectl apply -f sealed-secret.yaml
+        run: kubectl apply -f sealed-secrets.yaml
 
       - name: Install Helm
         uses: azure/setup-helm@v3
