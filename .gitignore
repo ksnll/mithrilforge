@@ -1,0 +1,7 @@
+/target
+.env
+secrets.yaml
+vendor
+node_modules
+dist/
+static

@@ -1,0 +1,53 @@
+name: CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Log in to Docker Registry
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login docker.ksnll.com -u ksnll --password-stdin
+
+      - name: Build and push ARM64 Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: |
+            docker.ksnll.com/mithrilforge:latest
+            docker.ksnll.com/mithrilforge:${{ github.sha }}
+
+      - name: Set up Kubeconfig
+        run: |
+          mkdir ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+
+      - name: Deploy Sealed Secret
+        run: kubectl apply -f sealed-secret.yaml
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Deploy Helm Chart
+        run: |
+          helm upgrade --install mithrilforge ./.helm/ --set image.repository=docker.ksnll.com/mithrilforge --set image.tag=${{ github.sha }}

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH inserted_website AS (INSERT INTO websites(source_address) VALUES ($1) RETURNING website_id, source_address)\n            SELECT inserted_website.website_id, inserted_website.source_address FROM inserted_website",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "website_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "source_address",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "2b8eaedfad005c86b4dbe055420a585081174fa798289e0ad51d39d34369128d"
+}

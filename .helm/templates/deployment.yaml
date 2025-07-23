@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "axum-app.name" . }}
+  labels:
+    app: {{ include "axum-app.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "axum-app.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "axum-app.name" . }}
+    spec:
+      imagePullSecrets:
+      - name: docker-registry-auth-json
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        envFrom:
+          - secretRef:
+              name: {{ include "axum-app.name" . }}
+        ports:
+        - containerPort: 5558
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+

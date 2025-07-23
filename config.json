@@ -1,0 +1,4 @@
+{
+  "SERVER_PORT": 5558,
+  "JWKS": "https://ksnll.eu.auth0.com/.well-known/jwks.json"
+}

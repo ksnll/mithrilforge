@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+:root {
+  --background: 240 6% 97%;
+  --primary: hsl(262 90% 50%);
+  --secondary: hsl(262 90% 65%);
+  --tertiary: hsl(22 90% 50%);
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+input[type="text"] {
+  border: 1px solid #ccc;
+  border-radius: 0.7rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.6rem;
+  font-size: 0.8em;
+  color: #111;
+  width: 80%;
+  box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-container button {
+  border-radius: 0.5rem;
+  margin-left: -36px;
+  margin-top: -2px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary);
+  color: white;
+  padding-top: 2px;
+  padding-right: 1px;
+  cursor: pointer;
+  box-shadow:
+    rgba(0, 0, 0, 0.4) 0px 2px 4px,
+    rgba(0, 0, 0, 0.3) 0px 7px 13px -3px,
+    rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+}
+
+.input-container button:active {
+  transform: translateY(2px);
+}
+
+input[type="text"]:focus {
+  border: 2px solid var(--primary);
+}
+
+form {
+  margin-top: 2rem;
+}
+
+h1 {
+  font-size: 3em;
+  font-weight: 700;
+  color: transparent;
+  background-clip: text;
+  background-image: var(--gradient-primary);
+}
+
+#main-container {
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: center;
+}
+
+.card h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.card {
+  border: 1px solid #ccc;
+  padding: 2rem;
+  margin: 2rem 8rem;
+  border-radius: 0.7rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.card content {
+  display: grid;
+  grid-template-columns: max-content 2fr;
+  column-gap: 2rem;
+  row-gap: 0.8rem;
+  line-height: 1.6;
+}
+
+.card content p {
+  margin: 0;
+}
+
+.website {
+  display: flex;
+  margin-left: 1rem;
+  margin-top: 1rem;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 3px solid #ccc;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-left: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

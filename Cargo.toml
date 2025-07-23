@@ -1,0 +1,42 @@
+[package]
+name = "mithrilforge"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "mithrilforge"
+path = "backend/lib/lib.rs"
+
+[[bin]]
+name = "mithrilforge_server"
+path = "backend/main.rs"
+
+
+[dependencies]
+anyhow = "1.0.98"
+axum = { version = "0.8.4", features = ["macros", "ws"] }
+axum-extra = { version = "0.10.1", features = ["typed-header"] }
+config = "0.15.13"
+dotenv = "0.15.0"
+futures-util = "0.3.31"
+http = "1.3.1"
+jwtk = "0.4.0"
+openai-api-rs = "6.0.7"
+reqwest = { version = "0.12.22", features = ["json"] }
+scraper = "0.23.1"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.141"
+sqlx = { version = "0.8.6", features = [
+  "postgres",
+  "runtime-tokio-native-tls",
+  "uuid",
+] }
+stream_throttle = "0.5.1"
+thiserror = "2.0.12"
+tokio = { version = "1.46.1", features = ["full"] }
+tokio-stream = { version = "0.1.17", features = ["sync"] }
+tower-http = { version = "0.6.6", features = ["cors", "fs", "trace"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+url = { version = "2.5.4", features = ["serde"] }
+uuid = { version = "1.17.0", features = ["serde"] }

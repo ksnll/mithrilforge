@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE websites SET contact_email = $1, contact_name = $2 WHERE website_id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "526405984c955f2d548acb2269923ba7a889cd25943ef0fc4a183207e1842e9b"
+}
