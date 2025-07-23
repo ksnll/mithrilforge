@@ -16,7 +16,6 @@ RUN apt-get update && apt install -y openssl
 
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/config.json /usr/src/app/
-COPY --from=builder /usr/src/app/frontend/dist/ /usr/src/app/
 COPY --from=builder /usr/src/app/target/release/mithrilforge_server /usr/src/app/
 COPY --from=nodebuilder /usr/src/app/dist/* /usr/src/app/static/
 CMD ["./mithrilforge_server"]
