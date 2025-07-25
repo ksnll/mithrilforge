@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use crate::domain::website::{
-    models::website::{ContactEvent, Website, WebsiteEvent, WebsiteEventError},
+    models::website::{
+        ContactEvent, GeneratedWebsiteEvent, Website, WebsiteEvent, WebsiteEventError,
+    },
     ports::WebsiteNotifier,
 };
 use tokio::sync::{
@@ -42,6 +44,19 @@ impl WebsiteNotifier for EventPublisher {
         tracing::debug!("Sending event for website_added");
         self.tx
             .send(WebsiteEvent::WebsiteAdded(website.to_owned()))
+            .map_err(|e| {
+                tracing::debug!("{}", e);
+                WebsiteEventError::Unknown(e.into())
+            })
+    }
+
+    async fn website_generated(
+        &self,
+        generated_website: GeneratedWebsiteEvent,
+    ) -> Result<usize, WebsiteEventError> {
+        tracing::debug!("Sending event for website_generated");
+        self.tx
+            .send(WebsiteEvent::GeneratedWebsite(generated_website.to_owned()))
             .map_err(|e| {
                 tracing::debug!("{}", e);
                 WebsiteEventError::Unknown(e.into())

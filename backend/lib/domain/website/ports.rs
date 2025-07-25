@@ -13,8 +13,9 @@ use std::future::Future;
 use tokio::sync::broadcast::Receiver;
 
 use super::models::website::{
-    Contact, ContactEvent, CreateWebsiteError, CreateWebsiteRequest, GetWebsitesError,
-    UpdateContactError, Website, WebsiteAiError, WebsiteEvent, WebsiteEventError,
+    Contact, ContactEvent, CreateWebsiteError, CreateWebsiteRequest, GeneratedWebsite,
+    GeneratedWebsiteEvent, GetWebsitesError, UpdateContactError, Website, WebsiteAiError,
+    WebsiteEvent, WebsiteEventError,
 };
 
 /// `WebsiteService` is the public API for the website domain.
@@ -75,6 +76,10 @@ pub trait WebsiteNotifier: Send + Sync + Clone + 'static {
         &self,
         website: &Website,
     ) -> impl Future<Output = Result<usize, WebsiteEventError>> + Send;
+    fn website_generated(
+        &self,
+        generated_website: GeneratedWebsiteEvent,
+    ) -> impl Future<Output = Result<usize, WebsiteEventError>> + Send;
 }
 
 /// `WebsiteAi` does calls to various AI services like lovable and chagpt for various tasks
@@ -89,6 +94,6 @@ pub trait WebsiteAi: Send + Sync + Clone + 'static {
     ) -> impl Future<Output = Result<String, WebsiteAiError>> + Send;
     fn generate_new_single_page(
         &self,
-        website_full_source: &str,
-    ) -> impl Future<Output = Result<String, WebsiteAiError>> + Send;
+        website_source_address: &str,
+    ) -> impl Future<Output = Result<GeneratedWebsite, WebsiteAiError>> + Send;
 }

@@ -1,7 +1,7 @@
 use dotenv::dotenv;
 use mithrilforge::{
     config::Config,
-    domain::website::service::Service,
+    domain::website::{ports::WebsiteAi, service::Service},
     inbound::http::{HttpServer, HttpServerConfig},
     outbound::{ai::Ai, event_publisher::EventPublisher, postgres::Postgres},
 };
@@ -15,7 +15,11 @@ async fn main() -> anyhow::Result<()> {
     let config = Config::from_config()?;
     let pgsql = Postgres::new(&config.database_url).await?;
     let notifier = EventPublisher::default();
-    let ai = Ai::default();
+    let ai = Ai::new(
+        &config.webdriver_address,
+        &config.lovable_user,
+        &config.lovable_password,
+    );
     let website_service = Service::new(pgsql, notifier, ai);
     let server_config = HttpServerConfig {
         port: &config.server_port,

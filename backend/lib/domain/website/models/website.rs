@@ -18,6 +18,12 @@ pub struct ContactEvent {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+pub struct GeneratedWebsiteEvent {
+    pub website_id: i64,
+    pub generated_website: GeneratedWebsite,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct Contact {
     pub contact_email: Option<String>,
     pub contact_name: Option<String>,
@@ -72,6 +78,7 @@ pub enum WebsiteEvent {
     FetchingContact,
     WebsiteAdded(Website),
     FetchedContact(ContactEvent),
+    GeneratedWebsite(GeneratedWebsiteEvent),
 }
 
 #[derive(Debug, Error)]
@@ -90,6 +97,8 @@ pub enum WebsiteAiError {
     FailedToFetchContent,
     #[error("failed to get name and owner from chatgpt")]
     FailedToFetchContact,
+    #[error("webdriver failed")]
+    WebdriverError(fantoccini::error::CmdError),
 }
 
 #[derive(Debug, Error)]
@@ -106,4 +115,10 @@ pub struct Social {
     facebook: Option<String>,
     google_maps: Option<String>,
     google_reviews: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
+pub struct GeneratedWebsite {
+    pub name: String,
+    pub url: Url,
 }

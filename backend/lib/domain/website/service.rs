@@ -7,8 +7,8 @@ use tokio::sync::broadcast::Receiver;
 
 use super::{
     models::website::{
-        ContactEvent, CreateWebsiteError, CreateWebsiteRequest, GetWebsitesError, Website,
-        WebsiteEvent,
+        ContactEvent, CreateWebsiteError, CreateWebsiteRequest, GeneratedWebsiteEvent,
+        GetWebsitesError, Website, WebsiteEvent,
     },
     ports::{WebsiteAi, WebsiteNotifier, WebsiteRepository, WebsiteService},
 };
@@ -77,7 +77,13 @@ where
                         contact: contact.clone(),
                     })
                     .await
-            // && let Ok(remake) = ai.generate_new_single_page(&content).await
+                && let Ok(generated_website) = ai.generate_new_single_page(&content).await
+                && let Ok(_) = notifier
+                    .website_generated(GeneratedWebsiteEvent {
+                        website_id,
+                        generated_website,
+                    })
+                    .await
             {
                 tracing::debug!("Contact fetched event sent for website {}", website_id);
             } else {

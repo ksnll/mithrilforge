@@ -1,22 +1,67 @@
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, time::Duration};
 
+use fantoccini::{Client, ClientBuilder, Locator, key::Key};
 use openai_api_rs::v1::{
     api::OpenAIClient,
     chat_completion::{self, ChatCompletionRequest},
-    common::{GPT4_O_MINI, O3},
+    common::O3,
     types,
 };
 use scraper::{Html, Selector};
-use serde::Deserialize;
+use serde_json::json;
+use tokio::time::{Instant, sleep};
 use url::Url;
 
 use crate::domain::website::{
-    models::website::{Contact, WebsiteAiError},
+    models::website::{Contact, GeneratedWebsite, WebsiteAiError},
     ports::WebsiteAi,
 };
 
-#[derive(Clone, Default)]
-pub struct Ai {}
+#[derive(Clone)]
+pub struct Ai {
+    webdriver_address: String,
+    lovable_user: String,
+    lovable_password: String,
+}
+
+impl Ai {
+    pub fn new(webdriver_addres: &str, lovable_user: &str, lovable_password: &str) -> Self {
+        Self {
+            webdriver_address: webdriver_addres.to_string(),
+            lovable_user: lovable_user.to_string(),
+            lovable_password: lovable_password.to_string(),
+        }
+    }
+
+    pub async fn wait_until_lovable_preview_disappears(
+        &self,
+        webdriver: &Client,
+        timeout: Duration,
+    ) -> Result<(), fantoccini::error::CmdError> {
+        let xpath = "//span[normalize-space(.)='Spinning up preview...']";
+        let start = Instant::now();
+
+        while start.elapsed() < timeout {
+            match webdriver.find(Locator::XPath(xpath)).await {
+                Ok(_) => {
+                    sleep(Duration::from_millis(250)).await;
+                }
+                Err(fantoccini::error::CmdError::WaitTimeout) => {
+                    return Ok(());
+                }
+                Err(e) => return Err(e),
+            }
+        }
+
+        Err(fantoccini::error::CmdError::WaitTimeout)
+    }
+}
+
+impl From<fantoccini::error::CmdError> for WebsiteAiError {
+    fn from(value: fantoccini::error::CmdError) -> Self {
+        WebsiteAiError::WebdriverError(value)
+    }
+}
 
 impl WebsiteAi for Ai {
     async fn get_full_website(
@@ -158,7 +203,7 @@ impl WebsiteAi for Ai {
         );
 
         let req = ChatCompletionRequest::new(
-            GPT4_O_MINI.to_string(),
+            O3.to_string(),
             vec![chat_completion::ChatCompletionMessage {
                 role: chat_completion::MessageRole::user,
                 content: chat_completion::Content::Text(format!(
@@ -213,84 +258,88 @@ impl WebsiteAi for Ai {
 
     async fn generate_new_single_page(
         &self,
-        website_full_source: &str,
-    ) -> Result<String, WebsiteAiError> {
-        tracing::debug!("getting contact");
-        let api_key = env::var("OPENAI_API_KEY")
-            .expect("OpenAI key not found. Should be saved in an env var called OPENAI_API_KEY");
-        let mut client = OpenAIClient::builder()
-            .with_api_key(api_key)
-            .build()
-            .map_err(|_| WebsiteAiError::FailedToInitOpeanAi)?;
+        website_source_address: &str,
+    ) -> Result<GeneratedWebsite, WebsiteAiError> {
+        tracing::debug!("generating new single page");
+        let caps = json!({
+            "browserName": "chrome",
+            "goog:chromeOptions": {
+                "detach": true,            // keep Chrome open after session ends
+                "args": ["--start-maximized"]
+            }
+        })
+        .as_object()
+        .unwrap()
+        .clone();
+        let webdriver = ClientBuilder::native()
+            .capabilities(caps)
+            .connect(&self.webdriver_address)
+            .await
+            .expect("failed to connect to WebDriver");
 
-        let mut properties = HashMap::new();
-        properties.insert(
-            "html_css_js".to_owned(),
-            Box::new(types::JSONSchemaDefine {
-                schema_type: Some(types::JSONSchemaType::String),
-                description: Some(
-                    "Full HTML (with inline CSS/JS) of a **new**, single‑page remake using TailwindCSS 3 \
-             and shadcn/ui. Must be self‑contained and ready to serve.".to_string(),
-                ),
-                ..Default::default()
-            }),
-        );
+        webdriver.goto("https://lovable.dev/login").await?;
 
-        let req = ChatCompletionRequest::new(
-            O3.to_string(),
-            vec![chat_completion::ChatCompletionMessage {
-                role: chat_completion::MessageRole::user,
-                content: chat_completion::Content::Text(format!(
-                    "You are an expert web designer. Start from provided website.
-                    • Ignore all external stylesheets and scripts – inline everything with Tailwind 3.
-                    • Use shadcn/ui for any interactive components.
-                    • Replace all images with modern, royalty‑free hero shots.\n\n{website_full_source}\n"
-                )),
-                name: None,
-                tool_calls: None,
-                tool_call_id: None,
-            }],
+        webdriver
+            .find(Locator::Id("email"))
+            .await?
+            .send_keys(&self.lovable_user)
+            .await?;
+
+        webdriver
+            .find(Locator::Id("password"))
+            .await?
+            .send_keys(&self.lovable_password)
+            .await?;
+        webdriver
+            .find(Locator::XPath("//button[normalize-space()='Log in']"))
+            .await?
+            .click()
+            .await?;
+
+        webdriver
+            .wait()
+            .at_most(Duration::from_secs(30))
+            .for_element(Locator::Id("chatinput"))
+            .await?;
+
+        let prompt = format!(
+            r#"
+You are a senior conversion‑focused web designer + copywriter. Starting from the website {website_source_address}, produce one modern, responsive, accessible landing page.
+Research: audience, core offer, pains, differentiators, social proof—invent plausible placeholders if missing.
+Brand: derive clean style; fix weak colors for accessible palette; modern typography, white space, subtle animation.
+Structure (omit if irrelevant): Hero (benefit headline + primary CTA) → Trust logos → Problem → Solution/Benefits (bullets) → Social Proof → Pricing/Offer → FAQ (4–6) → Secondary CTA + contact form → Footer.
+Copy: concise, persuasive, second‑person, outcome‑headed; ≥3 CTA placements.
+CTAs: high‑contrast (≥7:1) solid primary + outlined secondary; clear hover.
+Tech: mobile‑first; optimized images/placeholders; meta title/description; form (name/email/message) with validation. 
+"#
         )
-        .tools(vec![chat_completion::Tool {
-            r#type: chat_completion::ToolType::Function,
-            function: types::Function {
-                name: String::from("redo_website"),
-                description: Some(String::from("Single page containing a website html/css/js")),
-                parameters: types::FunctionParameters {
-                    schema_type: types::JSONSchemaType::Object,
-                    properties: Some(properties),
-                    required: Some(vec![String::from("html_css_js")]),
-                },
-            },
-        }])
-        .tool_choice(chat_completion::ToolChoiceType::Auto);
+        .replace("\n", " ");
 
-        dbg!("calling");
-        let result = client.chat_completion(req).await.unwrap();
-        dbg!(&result);
-        dbg!("called");
-        // .map_err(|e| WebsiteAiError::Unknown(e.into()))?;
-        match result.choices[0].finish_reason {
-            Some(chat_completion::FinishReason::tool_calls) => {
-                if let Some(tool_call) = result.choices[0].message.tool_calls.iter().next() {
-                    let arguments = tool_call[0].function.arguments.clone().unwrap();
-                    #[derive(Deserialize)]
-                    struct Remake {
-                        html_css_js: String,
-                    }
-                    dbg!(&arguments);
-                    let remake: Remake = serde_json::from_str(&arguments)
-                        .map_err(|e| WebsiteAiError::Unknown(e.into()))?;
-                    dbg!("here");
-                    tokio::fs::write("/tmp/website.html", remake.html_css_js)
-                        .await
-                        .unwrap();
-                }
-            }
-            _ => {
-                return Err(WebsiteAiError::FailedToFetchContact);
-            }
+        let chat_form = webdriver
+            .wait()
+            .at_most(Duration::from_secs(30))
+            .for_element(Locator::XPath("(//textarea)[1]"))
+            .await?;
+        for ch in prompt.chars() {
+            chat_form.send_keys(&ch.to_string()).await?;
+            sleep(Duration::from_millis(1)).await;
         }
-        Err(WebsiteAiError::FailedToFetchContact)
+        chat_form.send_keys(&prompt).await?;
+        chat_form.send_keys(&format!("{}", Key::Enter)).await?;
+
+        sleep(Duration::from_secs(10)).await;
+
+        let timeout = Duration::from_secs(600);
+        self.wait_until_lovable_preview_disappears(&webdriver, timeout)
+            .await?;
+        let name = webdriver
+            .find(fantoccini::Locator::XPath("//*[@id='main-menu']//p[1]"))
+            .await?
+            .text()
+            .await?;
+        Ok(GeneratedWebsite {
+            name,
+            url: webdriver.current_url().await?,
+        })
     }
 }

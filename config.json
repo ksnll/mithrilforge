@@ -1,4 +1,5 @@
 {
   "SERVER_PORT": 5558,
-  "JWKS": "https://ksnll.eu.auth0.com/.well-known/jwks.json"
+  "JWKS": "https://ksnll.eu.auth0.com/.well-known/jwks.json",
+  "WEBDRIVER_ADDRESS": "http://localhost:52485"
 }
