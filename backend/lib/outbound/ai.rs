@@ -261,18 +261,7 @@ impl WebsiteAi for Ai {
         website_source_address: &str,
     ) -> Result<GeneratedWebsite, WebsiteAiError> {
         tracing::debug!("generating new single page");
-        let caps = json!({
-            "browserName": "chrome",
-            "goog:chromeOptions": {
-                "detach": true,            // keep Chrome open after session ends
-                "args": ["--start-maximized"]
-            }
-        })
-        .as_object()
-        .unwrap()
-        .clone();
         let webdriver = ClientBuilder::native()
-            .capabilities(caps)
             .connect(&self.webdriver_address)
             .await
             .expect("failed to connect to WebDriver");
