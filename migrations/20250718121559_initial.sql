@@ -5,7 +5,8 @@ DROP TABLE IF EXISTS websites;
 CREATE TABLE IF NOT EXISTS websites (
     website_id BIGSERIAL PRIMARY KEY,
     source_address VARCHAR(255) UNIQUE NOT NULL,
-    lovable_project_id VARCHAR,
+    generated_website_link VARCHAR(255),
+    generated_website_name VARCHAR(255),
     contact_email VARCHAR(255),
     contact_name VARCHAR(255),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

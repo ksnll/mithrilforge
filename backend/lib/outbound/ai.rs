@@ -8,7 +8,6 @@ use openai_api_rs::v1::{
     types,
 };
 use scraper::{Html, Selector};
-use serde_json::json;
 use tokio::time::{Instant, sleep};
 use url::Url;
 

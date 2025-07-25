@@ -10,7 +10,8 @@ type Website = {
   contact_name?: string;
   contact_email?: string;
   gpt_prompt?: string;
-  lovable_link?: string;
+  generated_website_name?: string;
+  generated_website_link?: string;
 };
 type GetWebsites = { "websites": Website[] };
 
@@ -45,6 +46,19 @@ export const Websites = () => {
           );
           break;
         }
+        case "GeneratedWebsite": {
+          const {
+            website_id,
+            generated_website: { name, url },
+          } = message;
+
+          setState(
+            w => w.id === website_id,
+            { generated_website_link: url, generated_website_name: name },
+          );
+          break;
+        }
+
       }
     };
 
@@ -76,10 +90,16 @@ export const Websites = () => {
         <p><strong>GPT prompt:</strong></p>
         <div class="spinner" role="status" aria-label="Loading"></div></div>
 
+      <div class="website">
+        <p><strong>Generated website name:</strong></p>
+        {website.generated_website_name ? <span class="ml-3">{website.generated_website_name}</span> : <div class="spinner" role="status" aria-label="Loading"></div>}
+      </div>
+
 
       <div class="website">
-        <p><strong>Lovable link:</strong></p>
-        <div class="spinner" role="status" aria-label="Loading"></div></div>
+        <p><strong>Generated website link:</strong></p>
+        {website.generated_website_link ? <span class="ml-3">{website.generated_website_link}</span> : <div class="spinner" role="status" aria-label="Loading"></div>}
+      </div>
     </div>
   </div>}</For>;
 }

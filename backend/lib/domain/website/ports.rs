@@ -14,8 +14,8 @@ use tokio::sync::broadcast::Receiver;
 
 use super::models::website::{
     Contact, ContactEvent, CreateWebsiteError, CreateWebsiteRequest, GeneratedWebsite,
-    GeneratedWebsiteEvent, GetWebsitesError, UpdateContactError, Website, WebsiteAiError,
-    WebsiteEvent, WebsiteEventError,
+    GeneratedWebsiteEvent, GetWebsitesError, UpdateContactError, UpdateGeneratedWebsiteError,
+    Website, WebsiteAiError, WebsiteEvent, WebsiteEventError,
 };
 
 /// `WebsiteService` is the public API for the website domain.
@@ -60,6 +60,12 @@ pub trait WebsiteRepository: Clone + Send + Sync + 'static {
         website_id: i64,
         contact: &Contact,
     ) -> impl Future<Output = Result<(), UpdateContactError>> + Send;
+
+    fn update_generated_website(
+        &self,
+        website_id: i64,
+        generated_website: &GeneratedWebsite,
+    ) -> impl Future<Output = Result<(), UpdateGeneratedWebsiteError>> + Send;
 }
 
 /// `WebsiteNotifier` triggers notifications for status changes on websites.

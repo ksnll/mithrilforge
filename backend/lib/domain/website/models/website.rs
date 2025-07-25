@@ -3,12 +3,14 @@ use thiserror::Error;
 use url::Url;
 
 /// A uniquely identifiable website
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Default)]
 pub struct Website {
     pub id: i64,
     pub source_address: String,
     pub contact_email: Option<String>,
     pub contact_name: Option<String>,
+    pub generated_website_link: Option<String>,
+    pub generated_website_name: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
@@ -34,8 +36,7 @@ impl Website {
         Self {
             id,
             source_address: source_address.to_string(),
-            contact_email: None,
-            contact_name: None,
+            ..Default::default()
         }
     }
 }
@@ -107,6 +108,12 @@ pub enum UpdateContactError {
     Unknown(#[from] anyhow::Error),
     #[error("failed to start transaction")]
     FailedTransaction(sqlx::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum UpdateGeneratedWebsiteError {
+    #[error(transparent)]
+    Unknown(#[from] anyhow::Error),
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]

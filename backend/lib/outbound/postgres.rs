@@ -4,8 +4,8 @@ use std::str::FromStr;
 
 use crate::domain::website::{
     models::website::{
-        Contact, CreateWebsiteError, CreateWebsiteRequest, GetWebsitesError, UpdateContactError,
-        Website,
+        Contact, CreateWebsiteError, CreateWebsiteRequest, GeneratedWebsite, GetWebsitesError,
+        UpdateContactError, UpdateGeneratedWebsiteError, Website,
     },
     ports::WebsiteRepository,
 };
@@ -59,12 +59,39 @@ impl WebsiteRepository for Postgres {
         let websites = sqlx::query_as!(
             Website,
             r#"
-            SELECT website_id as id, source_address, contact_name, contact_email FROM websites"#
+            SELECT website_id as id, source_address, contact_name, contact_email, generated_website_link, generated_website_name FROM websites"#
         )
         .fetch_all(&self.pool)
         .await
         .map_err(|e| GetWebsitesError::Unknown(e.into()))?;
         Ok(websites)
+    }
+
+    async fn update_generated_website(
+        &self,
+        website_id: i64,
+        generated_website: &GeneratedWebsite,
+    ) -> Result<(), UpdateGeneratedWebsiteError> {
+        tracing::debug!("Updating lovable for {}", website_id);
+
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|e| UpdateGeneratedWebsiteError::Unknown(e.into()))?;
+        sqlx::query!(
+            r#"UPDATE websites SET generated_website_name = $1, generated_website_link = $2 WHERE website_id = $3"#,
+            generated_website.name,
+            generated_website.url.to_string(),
+            website_id
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| UpdateGeneratedWebsiteError::Unknown(e.into()))?;
+        tx.commit()
+            .await
+            .map_err(|e| UpdateGeneratedWebsiteError::Unknown(e.into()))?;
+        Ok(())
     }
 
     async fn update_contact(

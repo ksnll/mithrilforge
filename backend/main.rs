@@ -1,7 +1,7 @@
 use dotenv::dotenv;
 use mithrilforge::{
     config::Config,
-    domain::website::{ports::WebsiteAi, service::Service},
+    domain::website::service::Service,
     inbound::http::{HttpServer, HttpServerConfig},
     outbound::{ai::Ai, event_publisher::EventPublisher, postgres::Postgres},
 };
